@@ -55,11 +55,12 @@ fig106 <- function()
 fig107 <- function()
 {
   data = scan(paste(DATA, "eq5exp6.dat", sep=""))
-  len  = length(data)
+  #len  = length(data)
   len2 = length(data) / 2
-  mat = matrix(0, len2, 2)
-  mat[,1] = data[1:len2]
-  mat[,2] = data[(len2+1):len]
+  #mat = matrix(0, len2, 2)
+  #mat[,1] = data[1:len2]
+  #mat[,2] = data[(len2+1):len]
+  mat = array(data, dim=c(len2, 2))
   
   par(mfrow=c(2, 1))
   plot.ts(mat[,1], main="Earthquake", ylab="EQ5")
@@ -110,3 +111,131 @@ fig111 <- function()
   plot.ts(c + 5*w)
 }
 
+ex116 <- function()
+{
+  w = rnorm(500, 0, 1)
+  par(mfrow=c(2, 1))
+  plot.ts(w)
+  acf(w, type="covariance")
+}
+
+ex117 <- function(n=500)
+{
+  w = rnorm(n, 0, 1)
+  v = filter(w, sides=2, rep(1,3)/3)
+  v[is.na(v)] = w[is.na(v)]
+  par(mfrow=c(2, 1))
+  plot.ts(v)
+  acf(v, type="covariance")
+}
+
+# Definition 1.14: sample autocovariance function
+sacov <- function(x, h)
+{
+  mx = mean(x)
+  nx = length(x)
+  result = mean((x[(1+h):nx] - mx) * (x[1:(nx-h)] - mx))
+  return(result)
+}
+
+# Definition 1.15: sample autocorrelation function
+sacor <- function(x, h)
+{
+  result = sacov(x, h) / sacov(x, 0)
+  return(result)
+}
+
+# Definition 1.16: sample cross-covariance function
+sccov <- function(x, y, h)
+{
+  nx = length(x)
+  ny = length(y)
+  if (nx != ny)
+  {
+    writeLines("Error: chap1.R: sccov: length(x) != length(y)")
+    return
+  }
+  mx = mean(x)
+  my = mean(y)
+  if (h >= 0)
+  {
+    result = mean((x[(1+h):nx] - mx) * (y[1:(ny-h)] - my))
+    return(result)
+  }
+  result = mean((x[(1):(nx+h)] - mx) * (y[(1-h):(ny)] - my))
+  return(result)
+}
+
+# Equation 1.47: sample autocovariance matrix
+sacovmat <- function(mat, h)
+{
+  if (length(dim(mat)) !=2)
+  {
+    writeLines("Error: chap1.R: sacovmat: length(x) != length(y)")
+    return
+  }
+  ncols = dim(mat)[2]
+  result = matrix(0, ncols, ncols)
+  for (i in seq(1, ncols))
+  {
+    for (j in seq(1, ncols))
+    {
+      result[i, j] = sccov(mat[,i], mat[,j], h)
+    }
+  }
+  return(result)
+}
+
+#Property 1.1: Large sample distribution of the autocorrelation function
+prop101 <- function(n, H)
+{
+  x = rnorm(n, 0, 1)
+  result = seq(H)
+  for (i in seq(H))
+  {
+    result[i] = sacor(x, i)
+  }
+  sdr = sd(result)
+  result = 1.0 / (sdr * sdr)
+  print(paste("n =", n))
+  print(paste("1.0 / sd(sacor)^2 =", result))
+}
+
+fig113 <- function()
+{
+  sp = scan(paste(DATA, "speech.dat", sep=""))
+  par(mfrow=c(2, 1))
+  plot.ts(sp)
+  acf(sp, 250)
+}
+
+fig114 <- function()
+{
+  data1 = scan(paste(DATA, "soi.dat", sep=""))
+  data2 = scan(paste(DATA, "recruit.dat", sep=""))
+
+  #data1 = ts(data1, start=1950, frequency=12)
+  #data2 = ts(data2, start=1950, frequency=12)
+  
+  par(mfrow=c(3, 2))
+  plot.ts(data1, main="SOI")
+  plot.ts(data2, main="Recruits")
+  acf(data1, 50)
+  acf(data2, 50)
+  ccf(data1, data2, 50)
+}
+
+fig115 <- function()
+{
+  data = scan(paste(DATA, "soiltemp.dat", sep=""))
+  mat = t(array(data, dim=c(36, 64)))
+  persp(mat, zlab="Temperature", xlab="Rows", ylab="Columns", theta=210, phi=30, scale=TRUE, expand=0.3)
+}
+
+fig116 <- function()
+{
+  data = scan(paste(DATA, "soiltemp.dat", sep=""))
+  mat = t(array(data, dim=c(36, 64)))
+  result = rowMeans(mat)
+  plot.ts(result)
+}
