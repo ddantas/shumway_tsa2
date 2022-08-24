@@ -1,8 +1,110 @@
+############################################################################
+#
+# shumway_tsa2/chap1.R
+#
+# ddantas 22/08/2022
+#
+############################################################################
 
-DATA = "mydata/"
+source("const.R")
 
-PCH = 20
-TYPE = "o"
+
+############################################################################
+#
+# Load functions
+#
+############################################################################
+
+load_eq5exp6 <- function()
+{
+  data = scan(paste(DATA, "eq5exp6.dat", sep=""))
+  #len  = length(data)
+  len2 = length(data) / 2
+  #mat = matrix(0, len2, 2)
+  #mat[,1] = data[1:len2]
+  #mat[,2] = data[(len2+1):len]
+  mat = array(data, dim=c(len2, 2))
+  return(mat)
+}
+
+load_globtemp <- function()
+{
+  temp = scan(paste(DATA, "globtemp.dat", sep=""))
+  temp = temp[45:142]
+  temp = ts(temp, start=1900, frequency=1)
+  return(temp)
+}
+
+
+############################################################################
+#
+# Definitions
+#
+############################################################################
+
+# Definition 1.14: sample autocovariance function
+sacov <- function(x, h)
+{
+  mx = mean(x)
+  nx = length(x)
+  result = mean((x[(1+h):nx] - mx) * (x[1:(nx-h)] - mx))
+  return(result)
+}
+
+# Definition 1.15: sample autocorrelation function
+sacor <- function(x, h)
+{
+  result = sacov(x, h) / sacov(x, 0)
+  return(result)
+}
+
+# Definition 1.16: sample cross-covariance function
+sccov <- function(x, y, h)
+{
+  nx = length(x)
+  ny = length(y)
+  if (nx != ny)
+  {
+    writeLines("Error: chap1.R: sccov: length(x) != length(y)")
+    return
+  }
+  mx = mean(x)
+  my = mean(y)
+  if (h >= 0)
+  {
+    result = mean((x[(1+h):nx] - mx) * (y[1:(ny-h)] - my))
+    return(result)
+  }
+  result = mean((x[(1):(nx+h)] - mx) * (y[(1-h):(ny)] - my))
+  return(result)
+}
+
+# Equation 1.47: sample autocovariance matrix
+sacovmat <- function(mat, h)
+{
+  if (length(dim(mat)) !=2)
+  {
+    writeLines("Error: chap1.R: sacovmat: length(x) != length(y)")
+    return
+  }
+  ncols = dim(mat)[2]
+  result = matrix(0, ncols, ncols)
+  for (i in seq(1, ncols))
+  {
+    for (j in seq(1, ncols))
+    {
+      result[i, j] = sccov(mat[,i], mat[,j], h)
+    }
+  }
+  return(result)
+}
+
+
+############################################################################
+#
+# Figures and examples
+#
+############################################################################
 
 fig101 <- function()
 {
@@ -13,8 +115,7 @@ fig101 <- function()
 
 fig102 <- function()
 {
-  temp = scan(paste(DATA, "globtemp.dat", sep=""))
-  temp = ts(temp, start=1900, frequency=2)
+  temp = load_globtemp()
   plot(temp, ylab="Global temperature deviation", pch=PCH, type=TYPE)
 }
 
@@ -54,13 +155,7 @@ fig106 <- function()
 
 fig107 <- function()
 {
-  data = scan(paste(DATA, "eq5exp6.dat", sep=""))
-  #len  = length(data)
-  len2 = length(data) / 2
-  #mat = matrix(0, len2, 2)
-  #mat[,1] = data[1:len2]
-  #mat[,2] = data[(len2+1):len]
-  mat = array(data, dim=c(len2, 2))
+  mat = load_eq5exp6()
   
   par(mfrow=c(2, 1))
   plot.ts(mat[,1], main="Earthquake", ylab="EQ5")
@@ -129,63 +224,6 @@ ex117 <- function(n=500)
   acf(v, type="covariance")
 }
 
-# Definition 1.14: sample autocovariance function
-sacov <- function(x, h)
-{
-  mx = mean(x)
-  nx = length(x)
-  result = mean((x[(1+h):nx] - mx) * (x[1:(nx-h)] - mx))
-  return(result)
-}
-
-# Definition 1.15: sample autocorrelation function
-sacor <- function(x, h)
-{
-  result = sacov(x, h) / sacov(x, 0)
-  return(result)
-}
-
-# Definition 1.16: sample cross-covariance function
-sccov <- function(x, y, h)
-{
-  nx = length(x)
-  ny = length(y)
-  if (nx != ny)
-  {
-    writeLines("Error: chap1.R: sccov: length(x) != length(y)")
-    return
-  }
-  mx = mean(x)
-  my = mean(y)
-  if (h >= 0)
-  {
-    result = mean((x[(1+h):nx] - mx) * (y[1:(ny-h)] - my))
-    return(result)
-  }
-  result = mean((x[(1):(nx+h)] - mx) * (y[(1-h):(ny)] - my))
-  return(result)
-}
-
-# Equation 1.47: sample autocovariance matrix
-sacovmat <- function(mat, h)
-{
-  if (length(dim(mat)) !=2)
-  {
-    writeLines("Error: chap1.R: sacovmat: length(x) != length(y)")
-    return
-  }
-  ncols = dim(mat)[2]
-  result = matrix(0, ncols, ncols)
-  for (i in seq(1, ncols))
-  {
-    for (j in seq(1, ncols))
-    {
-      result[i, j] = sccov(mat[,i], mat[,j], h)
-    }
-  }
-  return(result)
-}
-
 #Property 1.1: Large sample distribution of the autocorrelation function
 prop101 <- function(n, H)
 {
@@ -238,4 +276,65 @@ fig116 <- function()
   mat = t(array(data, dim=c(36, 64)))
   result = rowMeans(mat)
   plot.ts(result)
+}
+
+prob101 <- function()
+{
+  mat = load_eq5exp6()
+
+  ts.plot(mat[,1:2], lty=c(1,2), col=c(1,2))
+}
+
+prob102 <- function()
+{
+  mat = matrix(0, 200, 4)
+
+  mat[101:200,1] = 10*exp(-seq(100)/20.0)  * cos(2*pi*seq(101:200)/4.0)
+  mat[101:200,2] = 10*exp(-seq(100)/200.0) * cos(2*pi*seq(101:200)/4.0)
+  mat[101:200,3] = 10*exp(-seq(100)/20.0)
+  mat[101:200,4] = 10*exp(-seq(100)/200.0)
+
+  ts.plot(mat[,1:4], lty=c(1,2), col=c(1,2))
+  return(mat)
+}
+
+prob103 <- function()
+{
+  set.seed(154)
+  wa = rnorm(100, 0, 1)
+  xa = filter(wa, filter=c(0.0, -0.9), method="recursive")
+  va = filter(xa, filter=c(0.25, 0.25, 0.25, 0.25), method="recursive")
+
+  xb = cos(2*pi*seq(100)/8.0)
+  vb = filter(xb, filter=c(0.25, 0.25, 0.25, 0.25), method="recursive")
+
+  xc = cos(2*pi*seq(100)/8.0) + wa
+  vc = filter(xc, filter=c(0.25, 0.25, 0.25, 0.25), method="recursive")
+
+  mata = cbind(xa, va)
+  matb = cbind(xb, vb)
+  matc = cbind(xc, vc)
+  
+  par(mfrow=c(3, 1))
+  ts.plot(mata[,1:2], lty=c(1,2), col=c(1,2))
+  ts.plot(matb[,1:2], lty=c(1,2), col=c(1,2))
+  ts.plot(matc[,1:2], lty=c(1,2), col=c(1,2))
+}
+
+prob105 <- function()
+{
+  mat = prob102()
+
+  print(mean(mat[,1]))
+  print(mean(mat[,2]))
+  
+  print(sacov(mat[,1], 0))
+  print(sacov(mat[,1], 1))
+  print(sacov(mat[,1], 2))
+  print(sacov(mat[,1], 3))
+
+  print(sacov(mat[,2], 0))
+  print(sacov(mat[,2], 1))
+  print(sacov(mat[,2], 2))
+  print(sacov(mat[,2], 3))
 }
