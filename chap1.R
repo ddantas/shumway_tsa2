@@ -35,6 +35,17 @@ load_globtemp <- function()
   return(temp)
 }
 
+load_soi <- function()
+{
+  soi = scan(paste(DATA, "soi.dat", sep=""))
+  rec = scan(paste(DATA, "recruit.dat", sep=""))
+
+  soi = ts(soi, start=1950, frequency=12)
+  rec = ts(rec, start=1950, frequency=12)
+
+  mat = cbind(soi, rec)
+  return(mat)
+}
 
 ############################################################################
 #
@@ -133,15 +144,13 @@ fig104 <- function()
 
 fig105 <- function()
 {
-  data1 = scan(paste(DATA, "soi.dat", sep=""))
-  data2 = scan(paste(DATA, "recruit.dat", sep=""))
-
-  data1 = ts(data1, start=1950, frequency=12)
-  data2 = ts(data2, start=1950, frequency=12)
+  mat = load_soi()
+  soi = mat[,"soi"]
+  rec = mat[,"rec"]
   
   par(mfrow=c(2, 1))
-  plot.ts(data1, main="SOI")
-  plot.ts(data2, main="Recruits")
+  plot.ts(soi, main="SOI")
+  plot.ts(rec, main="Recruits")
 }
 
 fig106 <- function()
