@@ -47,6 +47,14 @@ load_soi <- function()
   return(mat)
 }
 
+load_jj <- function()
+{
+  jj = scan(paste(DATA, "jj.dat", sep=""))
+  jj = ts(jj, start=1960, frequency=4)
+  return(jj)
+}
+
+
 ############################################################################
 #
 # Definitions
@@ -117,31 +125,35 @@ sacovmat <- function(mat, h)
 #
 ############################################################################
 
+# Figure 1.1: J&J quarterly EPS, 84 quarters 1960-I to 1980-IV.
 fig101 <- function()
 {
-  jj = scan(paste(DATA, "jj.dat", sep=""))
-  jj = ts(jj, start=1960, frequency=4)
+  jj = load_jj()
   plot(jj, ylab="Quarterly earnings per share", pch=PCH, type=TYPE)
 }
 
+# Figure 1.2: Yearly average global temperature deviations (1900-1997) in degrees centigrade.
 fig102 <- function()
 {
   temp = load_globtemp()
   plot(temp, ylab="Global temperature deviation", pch=PCH, type=TYPE)
 }
 
+# Figure 1.3: Speech recording of the syllable aa..hh sampled at 10kHz with n=1020 points.
 fig103 <- function()
 {
   sp = scan(paste(DATA, "speech.dat", sep=""))
   plot(sp, ylab="Speech recording", type="l")
 }
 
+# Figure 1.4: Returns ofthe NYSE. The data are daily value weighted market returns from Feb 2, 1984 to Dec 31, 1991 (2000 trading days).
 fig104 <- function()
 {
   data = scan(paste(DATA, "nyse.dat", sep=""))
   plot(data, ylab="NYSE returns", type="l")
 }
 
+# Figure 1.5: Monthly SOI and recruitment, 1950-1987.
 fig105 <- function()
 {
   mat = load_soi()
@@ -153,6 +165,7 @@ fig105 <- function()
   plot.ts(rec, main="Recruits")
 }
 
+# Figure 1.6: fMRI data from various locations in the cortex, thalamus, and cerebellum; n=128 points at 0.5 Hz.
 fig106 <- function()
 {
   data = read.table(paste(DATA, "fmri.dat", sep=""))
@@ -162,6 +175,7 @@ fig106 <- function()
   ts.plot(data[,6:9], lty=c(1,4), ylab="BOLD", main="Thalamus & Cerebellum")
 }
 
+# Figure 1.7: Arrival phases from an earthquake and explosion at 40Hz.
 fig107 <- function()
 {
   mat = load_eq5exp6()
@@ -171,6 +185,7 @@ fig107 <- function()
   plot.ts(mat[,2], main="Explosion", ylab="EXP6")
 }
 
+# Figure 1.8: Gaussian white noise series and its three-point moving average.
 fig108 <- function()
 {
   w = rnorm(500, 0, 1)
@@ -181,6 +196,7 @@ fig108 <- function()
   plot.ts(v)
 }
 
+# Figure 1.9: Autoregressive series generated from model 1.2.
 fig109 <- function()
 {
   w = rnorm(550, 0, 1)
@@ -191,6 +207,7 @@ fig109 <- function()
   plot.ts(v)
 }
 
+# Figure 1.10: Random walk, sigma = 1, with drift delta = .2.
 fig110 <- function()
 {
   set.seed(154)
@@ -203,6 +220,7 @@ fig110 <- function()
   lines(0.2 * (1:200), lty="dashed")
 }
 
+# Figure 1.11: Cosine wave with period 50 compared with the cosine wave contaminated with addictive white Gaussian noise.
 fig111 <- function()
 {
   set.seed(154)
@@ -215,6 +233,7 @@ fig111 <- function()
   plot.ts(c + 5*w)
 }
 
+# Example 1.16: Autocovariance of white noise.
 ex116 <- function()
 {
   w = rnorm(500, 0, 1)
@@ -223,6 +242,7 @@ ex116 <- function()
   acf(w, type="covariance")
 }
 
+# Example 1.16: Autocovariance of a moving average.
 ex117 <- function(n=500)
 {
   w = rnorm(n, 0, 1)
@@ -233,7 +253,7 @@ ex117 <- function(n=500)
   acf(v, type="covariance")
 }
 
-#Property 1.1: Large sample distribution of the autocorrelation function
+# Property 1.1: Large sample distribution of the autocorrelation function
 prop101 <- function(n, H)
 {
   x = rnorm(n, 0, 1)
@@ -248,6 +268,7 @@ prop101 <- function(n, H)
   print(paste("1.0 / sd(sacor)^2 =", result))
 }
 
+# Figure 1.13: ACF of the speech series.
 fig113 <- function()
 {
   sp = scan(paste(DATA, "speech.dat", sep=""))
@@ -256,6 +277,7 @@ fig113 <- function()
   acf(sp, 250)
 }
 
+# Figure 1.14: Sample ACFs of the SOI seriesand of the recruitment series.
 fig114 <- function()
 {
   data1 = scan(paste(DATA, "soi.dat", sep=""))
@@ -272,6 +294,7 @@ fig114 <- function()
   ccf(data1, data2, 50)
 }
 
+# Figure 1.15: Two-dimensional time series of temperature measurements taken on a rectangular field (64x37 with 17-foot spacing).
 fig115 <- function()
 {
   data = scan(paste(DATA, "soiltemp.dat", sep=""))
@@ -279,6 +302,7 @@ fig115 <- function()
   persp(mat, zlab="Temperature", xlab="Rows", ylab="Columns", theta=210, phi=30, scale=TRUE, expand=0.3)
 }
 
+# Figure 1.16: Row averages of the two-dimensional soil temperature profile.
 fig116 <- function()
 {
   data = scan(paste(DATA, "soiltemp.dat", sep=""))
@@ -286,6 +310,13 @@ fig116 <- function()
   result = rowMeans(mat)
   plot.ts(result)
 }
+
+
+############################################################################
+#
+# Problems
+#
+############################################################################
 
 prob101 <- function()
 {
@@ -333,17 +364,24 @@ prob103 <- function()
 prob105 <- function()
 {
   mat = prob102()
+  mat_sacov = mat[,1:2]
 
   print(mean(mat[,1]))
   print(mean(mat[,2]))
-  
-  print(sacov(mat[,1], 0))
-  print(sacov(mat[,1], 1))
-  print(sacov(mat[,1], 2))
-  print(sacov(mat[,1], 3))
 
-  print(sacov(mat[,2], 0))
-  print(sacov(mat[,2], 1))
-  print(sacov(mat[,2], 2))
-  print(sacov(mat[,2], 3))
+  for (j in seq(1:2))
+  {
+    for (i in seq(0:199))
+    {
+      result = sacov(mat[,j], i)
+      mat[i,j] = result
+      #cat(j, "\t", i, "\t", result, "\n", sep="\t")
+    }
+  }
+  
+  par(mfrow=c(2, 1))
+  ts.plot(mat[,c(1,3)], lty=c(1,2), col=c(1,2))
+  lines(mat_sacov[,1])
+  ts.plot(mat[,c(2,4)], lty=c(1,2), col=c(1,2))
+  lines(mat_sacov[,2])
 }
